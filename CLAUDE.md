@@ -44,4 +44,6 @@ npm run lint     # ESLint 実行
 
 ## スキル（Claude Code カスタムコマンド）
 
-プロジェクト固有のスキルは `~/.claude/` ではなく、このリポジトリ内の [.claude/commands/](.claude/commands/) ディレクトリに作成してください。これにより、スキルをバージョン管理に含められます。
+プロジェクト固有のスキルは `~/.claude/` ではなく、このリポジトリ内の [.claude/skills/](.claude/skills/) ディレクトリに作成してください。これにより、スキルをバージョン管理に含められます。
+
+各スキルは `.claude/skills/<スキル名>/SKILL.md` として配置します。
