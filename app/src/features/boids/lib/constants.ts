@@ -42,6 +42,7 @@ export const PREDATOR_SPRITE = [
   [0, 0, 0, 0, 1, 0, 0, 0, 0],
 ] as const satisfies ReadonlyArray<ReadonlyArray<0 | 1>>;
 
+export const PREDATOR_COUNT = 1;         // 捕食者の数
 export const PREDATOR_PIXEL_SIZE = 4;    // 捕食者スプライトの1ピクセルサイズ（Boidより大きい）
 export const PREDATOR_COLOR = '#ff2200'; // 捕食者のネオンカラー（脅威を示す赤）
 export const PREDATOR_SPEED = 2.8;       // 捕食者の最大速度（Boidより速い）

@@ -9,24 +9,29 @@ import { CRTCache, createCRTCache, drawCRTOverlay } from '../lib/crt';
 import { BOID_COUNT } from '../lib/constants';
 
 export default function BoidsCanvas() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    const container = containerRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !container) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // キャンバスをウィンドウサイズにリサイズ
+    // コンテナサイズに合わせてキャンバスをリサイズ
     let crtCache: CRTCache;
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
       // リサイズ時にCRTキャッシュを再生成
       crtCache = createCRTCache(ctx, canvas.width, canvas.height);
     };
     resize();
-    window.addEventListener('resize', resize);
+
+    // コンテナのサイズ変化を監視
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
 
     // Boidを初期化
     const boids: Boid[] = Array.from({ length: BOID_COUNT }, () =>
@@ -64,16 +69,18 @@ export default function BoidsCanvas() {
     animate();
 
     return () => {
-      window.removeEventListener('resize', resize);
+      resizeObserver.disconnect();
       cancelAnimationFrame(animId);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="block"
-      style={{ cursor: 'crosshair' }}
-    />
+    <div ref={containerRef} className="relative w-full h-full">
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0"
+        style={{ cursor: 'crosshair' }}
+      />
+    </div>
   );
 }
