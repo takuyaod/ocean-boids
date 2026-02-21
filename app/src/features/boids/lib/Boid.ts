@@ -1,7 +1,6 @@
 import {
-  ALIEN_SPRITE,
   NEON_COLORS,
-  PIXEL_SIZE,
+  NeonColor,
   MAX_SPEED,
   MAX_FORCE,
   SEPARATION_RADIUS,
@@ -18,7 +17,7 @@ export class Boid {
   y: number;
   vx: number;
   vy: number;
-  color: string;
+  color: NeonColor;
 
   constructor(x: number, y: number) {
     this.x = x;
@@ -90,14 +89,14 @@ export class Boid {
   }
 
   // 位置・速度を更新する
-  update(boids: Boid[], width: number, height: number) {
-    const sep = this.separate(boids);
-    const ali = this.align(boids);
-    const coh = this.cohere(boids);
+  update(boids: Boid[], width: number, height: number): void {
+    const separation = this.separate(boids);
+    const alignment = this.align(boids);
+    const cohesion = this.cohere(boids);
 
     // 各ルールの力を重み付けして加算
-    this.vx += sep.x * SEPARATION_WEIGHT + ali.x * ALIGNMENT_WEIGHT + coh.x * COHESION_WEIGHT;
-    this.vy += sep.y * SEPARATION_WEIGHT + ali.y * ALIGNMENT_WEIGHT + coh.y * COHESION_WEIGHT;
+    this.vx += separation.x * SEPARATION_WEIGHT + alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT;
+    this.vy += separation.y * SEPARATION_WEIGHT + alignment.y * ALIGNMENT_WEIGHT + cohesion.y * COHESION_WEIGHT;
 
     const vel = limit(this.vx, this.vy, MAX_SPEED);
     this.vx = vel.x;
@@ -111,36 +110,5 @@ export class Boid {
     if (this.x > width) this.x -= width;
     if (this.y < 0) this.y += height;
     if (this.y > height) this.y -= height;
-  }
-
-  // エイリアンのピクセルアートを描画する
-  draw(ctx: CanvasRenderingContext2D) {
-    const offsetX = -(ALIEN_SPRITE[0].length * PIXEL_SIZE) / 2;
-    const offsetY = -(ALIEN_SPRITE.length * PIXEL_SIZE) / 2;
-
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    // 進行方向に向けて回転
-    ctx.rotate(Math.atan2(this.vy, this.vx) + Math.PI / 2);
-
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = this.color;
-    ctx.fillStyle = this.color;
-
-    // ピクセルアートを1マスずつ描画
-    for (let row = 0; row < ALIEN_SPRITE.length; row++) {
-      for (let col = 0; col < ALIEN_SPRITE[row].length; col++) {
-        if (ALIEN_SPRITE[row][col] === 1) {
-          ctx.fillRect(
-            offsetX + col * PIXEL_SIZE,
-            offsetY + row * PIXEL_SIZE,
-            PIXEL_SIZE,
-            PIXEL_SIZE
-          );
-        }
-      }
-    }
-
-    ctx.restore();
   }
 }

@@ -7,10 +7,11 @@ export const ALIEN_SPRITE = [
   [0, 1, 1, 0, 0, 1, 1, 0],
   [1, 0, 0, 1, 1, 0, 0, 1],
   [0, 1, 0, 0, 0, 0, 1, 0],
-];
+] as const satisfies ReadonlyArray<ReadonlyArray<0 | 1>>;
 
 // ネオンカラーパレット
-export const NEON_COLORS = ['#00ff41', '#00ffff', '#ff00ff'];
+export const NEON_COLORS = ['#00ff41', '#00ffff', '#ff00ff'] as const;
+export type NeonColor = typeof NEON_COLORS[number];
 
 export const PIXEL_SIZE = 3;   // スプライトの1ピクセルのサイズ
 export const BOID_COUNT = 60;  // Boidの数
@@ -26,3 +27,10 @@ export const COHESION_RADIUS = 75;
 export const SEPARATION_WEIGHT = 1.8;
 export const ALIGNMENT_WEIGHT = 1.0;
 export const COHESION_WEIGHT = 1.0;
+
+// CRTエフェクトのパラメータ
+export const CRT_SCANLINE_INTERVAL = 3;       // スキャンライン間隔（px）
+export const CRT_SCANLINE_OPACITY = 0.12;     // スキャンラインの不透明度
+export const CRT_VIGNETTE_INNER_RADIUS = 0.35; // ビネット内径（画面高さ比）
+export const CRT_VIGNETTE_OUTER_RADIUS = 0.85; // ビネット外径（画面高さ比）
+export const CRT_VIGNETTE_OPACITY = 0.55;     // ビネット不透明度
