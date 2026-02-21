@@ -1,5 +1,5 @@
 import BoidsCanvas from './BoidsCanvas';
-import { BOID_COUNT } from '../lib/constants';
+import { BOID_COUNT, PREDATOR_COUNT } from '../lib/constants';
 
 export default function TerminalWindow() {
   return (
@@ -36,12 +36,12 @@ export default function TerminalWindow() {
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[#00ff41]">❯</span>
               <span className="text-[#ddd]">
-                spawn --colony {BOID_COUNT} --predators 1
+                spawn --colony {BOID_COUNT} --predators {PREDATOR_COUNT}
               </span>
             </div>
             {/* コマンドの出力 */}
             <div className="mt-1 text-[#666]">
-              Spawning {BOID_COUNT} aliens and 1 predator into sector 7...
+              Spawning {BOID_COUNT} aliens and {PREDATOR_COUNT} predator into sector 7...
             </div>
           </div>
 
@@ -60,7 +60,7 @@ export default function TerminalWindow() {
             </span>
             <span>
               predator:{' '}
-              <span className="text-[#ff2200]">1</span>
+              <span className="text-[#ff2200]">{PREDATOR_COUNT}</span>
             </span>
           </div>
         </div>
