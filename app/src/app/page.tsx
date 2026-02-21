@@ -1,4 +1,4 @@
-import BoidsCanvas from '@/components/BoidsCanvas';
+import BoidsCanvas from '@/features/boids/components/BoidsCanvas';
 
 export default function Home() {
   return (

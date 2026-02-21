@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Boid } from '@/boids/Boid';
-import { drawCRTOverlay } from '@/boids/crt';
-import { BOID_COUNT } from '@/boids/constants';
+import { Boid } from '../lib/Boid';
+import { drawCRTOverlay } from '../lib/crt';
+import { BOID_COUNT } from '../lib/constants';
 
 export default function BoidsCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
