@@ -72,10 +72,12 @@ export class Boid {
     return limit(norm.x * MAX_SPEED - this.vx, norm.y * MAX_SPEED - this.vy, MAX_FORCE);
   }
 
-  // 逃避ルール：捕食者が近づいたら全力で逃げる
-  private flee(predator: Predator): Vec2 {
-    const dx = this.x - predator.x;
-    const dy = this.y - predator.y;
+  // 逃避ルール：捕食者が近づいたら全力で逃げる（ラップアラウンド考慮）
+  private flee(predator: Predator, width: number, height: number): Vec2 {
+    let dx = this.x - predator.x;
+    if (Math.abs(dx) > width / 2) dx -= Math.sign(dx) * width;
+    let dy = this.y - predator.y;
+    if (Math.abs(dy) > height / 2) dy -= Math.sign(dy) * height;
     const dist = magnitude(dx, dy);
     if (dist <= 0 || dist > PREDATOR_FLEE_RADIUS) return { x: 0, y: 0 };
     // 捕食者が近づくほど逃避力を強める（距離に反比例）
@@ -109,7 +111,7 @@ export class Boid {
     const separation = this.separate(boids);
     const alignment = this.align(boids);
     const cohesion = this.cohere(boids);
-    const fleeForce = this.flee(predator);
+    const fleeForce = this.flee(predator, width, height);
 
     // 各ルールの力を重み付けして加算（逃避が最優先）
     this.vx += separation.x * SEPARATION_WEIGHT + alignment.x * ALIGNMENT_WEIGHT + cohesion.x * COHESION_WEIGHT + fleeForce.x * PREDATOR_FLEE_WEIGHT;
