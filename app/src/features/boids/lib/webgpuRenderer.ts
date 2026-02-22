@@ -340,7 +340,10 @@ export class WebGPURenderer implements BoidsRenderer {
       const sinA = Math.sin(angle);
 
       for (const { ox, oy } of pixels) {
-        if (instanceCount + 1 > MAX_INSTANCES) return;
+        if (instanceCount + 1 > MAX_INSTANCES) {
+          console.warn(`インスタンス数が上限(${MAX_INSTANCES})に達しました。描画をスキップします`);
+          return;
+        }
 
         // ローカル座標を回転してワールド座標へ変換
         const wx = cx + cosA * ox - sinA * oy;

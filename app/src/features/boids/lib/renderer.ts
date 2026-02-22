@@ -20,13 +20,19 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<CreateR
   if (typeof navigator !== 'undefined' && 'gpu' in navigator && navigator.gpu) {
     try {
       const adapter = await navigator.gpu.requestAdapter();
-      if (adapter) {
-        const device = await adapter.requestDevice();
-        const { WebGPURenderer } = await import('./webgpuRenderer');
-        return { renderer: new WebGPURenderer(canvas, device), type: 'webgpu' };
+      if (!adapter) {
+        console.warn('GPU アダプターを取得できません。ハードウェアが WebGPU をサポートしていないか、ドライバが古い可能性があります。Canvas 2D にフォールバックします');
+      } else {
+        try {
+          const device = await adapter.requestDevice();
+          const { WebGPURenderer } = await import('./webgpuRenderer');
+          return { renderer: new WebGPURenderer(canvas, device), type: 'webgpu' };
+        } catch (error) {
+          console.warn(`GPU デバイスの初期化に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}。Canvas 2D にフォールバックします`);
+        }
       }
-    } catch {
-      // WebGPU 初期化失敗: Canvas 2D にフォールバック
+    } catch (error) {
+      console.warn(`GPU アダプターの取得に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}。Canvas 2D にフォールバックします`);
     }
   }
   const { Canvas2DRenderer } = await import('./canvas2DRenderer');
