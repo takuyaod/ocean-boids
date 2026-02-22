@@ -14,7 +14,7 @@ export class Predator {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
-    // 初期速度はランダムな方向へ
+    // 初期速度は定数 PREDATOR_SPEED を使用（スポーン時点では動的パラメータを参照しない設計）
     const angle = Math.random() * Math.PI * 2;
     this.vx = Math.cos(angle) * PREDATOR_SPEED;
     this.vy = Math.sin(angle) * PREDATOR_SPEED;

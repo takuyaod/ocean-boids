@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Boid } from '../lib/Boid';
 import { Predator } from '../lib/Predator';
-import { BOID_COUNT, type SimParams, DEFAULT_SIM_PARAMS } from '../lib/constants';
+import { type SimParams, DEFAULT_SIM_PARAMS } from '../lib/constants';
 import { spawnBoidsAtEdge } from '../lib/spawnUtils';
 import { type SpeciesCounts, createEmptySpeciesCounts } from '../lib/speciesUtils';
 import { createRenderer, type BoidsRenderer, type RendererType } from '../lib/renderer';
@@ -76,8 +76,8 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }:
       resizeObserver = new ResizeObserver(resize);
       resizeObserver.observe(container);
 
-      // Boid を初期化
-      const boids: Boid[] = Array.from({ length: BOID_COUNT }, () =>
+      // Boid を初期化（初期数は paramsRef から取得し情報源を一本化）
+      const boids: Boid[] = Array.from({ length: paramsRef.current.boidCount }, () =>
         new Boid(Math.random() * canvas.width, Math.random() * canvas.height),
       );
 

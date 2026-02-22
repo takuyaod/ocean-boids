@@ -10,6 +10,7 @@ import {
   COHESION_WEIGHT,
   PREDATOR_FLEE_RADIUS,
   PREDATOR_FLEE_WEIGHT,
+  PREDATOR_FLEE_FORCE_SCALE,
 } from './constants';
 import { Vec2, magnitude, normalize, limit } from './vec2';
 import type { Predator } from './Predator';
@@ -24,7 +25,7 @@ export class Boid {
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
-    // ランダムな初期速度を設定
+    // 初期速度は定数 MAX_SPEED を使用（スポーン時点では動的パラメータを参照しない設計）
     const angle = Math.random() * Math.PI * 2;
     this.vx = Math.cos(angle) * MAX_SPEED;
     this.vy = Math.sin(angle) * MAX_SPEED;
@@ -82,8 +83,7 @@ export class Boid {
     // 捕食者が近づくほど逃避力を強める（距離に反比例）
     const strength = (PREDATOR_FLEE_RADIUS - dist) / PREDATOR_FLEE_RADIUS;
     const norm = normalize(dx, dy);
-    // PREDATOR_FLEE_MAX_FORCE は maxForce の4倍としてスケール
-    return limit(norm.x * maxSpeed - this.vx, norm.y * maxSpeed - this.vy, maxForce * 4 * strength);
+    return limit(norm.x * maxSpeed - this.vx, norm.y * maxSpeed - this.vy, maxForce * PREDATOR_FLEE_FORCE_SCALE * strength);
   }
 
   // 結合ルール：近くのBoidの重心に向かう
