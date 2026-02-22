@@ -58,6 +58,16 @@ export default function BoidsCanvas() {
         for (let i = boids.length - 1; i >= 0; i--) {
           if (eaten.has(boids[i])) boids.splice(i, 1);
         }
+        // 捕食された数だけ画面端に新しいBoidを再スポーン
+        for (let i = 0; i < eaten.size; i++) {
+          const edge = Math.floor(Math.random() * 4);
+          let nx: number, ny: number;
+          if (edge === 0)      { nx = Math.random() * canvas.width; ny = 0; }
+          else if (edge === 1) { nx = Math.random() * canvas.width; ny = canvas.height; }
+          else if (edge === 2) { nx = 0;            ny = Math.random() * canvas.height; }
+          else                 { nx = canvas.width; ny = Math.random() * canvas.height; }
+          boids.push(new Boid(nx, ny));
+        }
       }
 
       // 各Boidを更新して描画
