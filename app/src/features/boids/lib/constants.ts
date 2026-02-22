@@ -155,6 +155,24 @@ export const PREDATOR_FLEE_WEIGHT    = 3.5;              // 逃避力の重み
 export const PREDATOR_FLEE_MAX_FORCE = MAX_FORCE * 4;   // 逃避時の最大操舵力
 export const PREDATOR_EAT_RADIUS     = 15;               // 捕食判定の距離閾値
 
+// ── シミュレーションパラメータ（動的調整用） ──────────────────────────────
+
+export type SimParams = {
+  boidCount: number;
+  maxSpeed: number;
+  maxForce: number;
+  predatorSpeed: number;
+  predatorMaxForce: number;
+};
+
+export const DEFAULT_SIM_PARAMS: SimParams = {
+  boidCount: BOID_COUNT,
+  maxSpeed: MAX_SPEED,
+  maxForce: MAX_FORCE,
+  predatorSpeed: PREDATOR_SPEED,
+  predatorMaxForce: PREDATOR_MAX_FORCE,
+};
+
 // ── CRTエフェクトのパラメータ ─────────────────────────────────────────────
 
 export const CRT_SCANLINE_INTERVAL    = 3;    // スキャンライン間隔（px）

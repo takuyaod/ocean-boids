@@ -1,7 +1,6 @@
 import { Boid } from './Boid';
 import {
   PREDATOR_SPEED,
-  PREDATOR_MAX_FORCE,
   PREDATOR_EAT_RADIUS,
 } from './constants';
 import { Vec2, magnitude, normalize, limit } from './vec2';
@@ -31,7 +30,7 @@ export class Predator {
   }
 
   // 最も近いBoidに向かって追尾するステアリング力を計算（ラップアラウンド考慮）
-  private chase(boids: Boid[], width: number, height: number): Vec2 {
+  private chase(boids: Boid[], width: number, height: number, predatorSpeed: number, predatorMaxForce: number): Vec2 {
     if (boids.length === 0) return { x: 0, y: 0 };
 
     // 最も近いBoidを探す（画面端をまたぐ最短経路で距離を測る）
@@ -52,9 +51,9 @@ export class Predator {
     const delta = this.wrappedDelta(nearest, width, height);
     const norm = normalize(delta.x, delta.y);
     return limit(
-      norm.x * PREDATOR_SPEED - this.vx,
-      norm.y * PREDATOR_SPEED - this.vy,
-      PREDATOR_MAX_FORCE,
+      norm.x * predatorSpeed - this.vx,
+      norm.y * predatorSpeed - this.vy,
+      predatorMaxForce,
     );
   }
 
@@ -71,12 +70,12 @@ export class Predator {
   }
 
   // 位置・速度を更新する
-  update(boids: Boid[], width: number, height: number): void {
-    const steer = this.chase(boids, width, height);
+  update(boids: Boid[], width: number, height: number, predatorSpeed: number, predatorMaxForce: number): void {
+    const steer = this.chase(boids, width, height, predatorSpeed, predatorMaxForce);
     this.vx += steer.x;
     this.vy += steer.y;
 
-    const vel = limit(this.vx, this.vy, PREDATOR_SPEED);
+    const vel = limit(this.vx, this.vy, predatorSpeed);
     this.vx = vel.x;
     this.vy = vel.y;
 

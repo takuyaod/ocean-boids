@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Boid } from '../lib/Boid';
 import { Predator } from '../lib/Predator';
-import { BOID_COUNT } from '../lib/constants';
+import { BOID_COUNT, type SimParams, DEFAULT_SIM_PARAMS } from '../lib/constants';
 import { spawnBoidsAtEdge } from '../lib/spawnUtils';
 import { type SpeciesCounts, createEmptySpeciesCounts } from '../lib/speciesUtils';
 import { createRenderer, type BoidsRenderer, type RendererType } from '../lib/renderer';
@@ -14,6 +14,7 @@ export type { SpeciesCounts };
 type BoidsCanvasProps = {
   onCountsUpdate?: (counts: SpeciesCounts) => void;
   onRendererReady?: (type: RendererType) => void;
+  params?: SimParams;
 };
 
 // 種別ごとの個体数を集計する
@@ -25,7 +26,7 @@ function buildSpeciesCounts(boids: Boid[]): SpeciesCounts {
   return counts;
 }
 
-export default function BoidsCanvas({ onCountsUpdate, onRendererReady }: BoidsCanvasProps) {
+export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }: BoidsCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -34,6 +35,12 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady }: BoidsCa
   useEffect(() => {
     onCountsUpdateRef.current = onCountsUpdate;
   }, [onCountsUpdate]);
+
+  // パラメータの最新参照を保持（アニメーションループの再起動を防ぐ）
+  const paramsRef = useRef<SimParams>(params ?? DEFAULT_SIM_PARAMS);
+  useEffect(() => {
+    paramsRef.current = params ?? DEFAULT_SIM_PARAMS;
+  }, [params]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -80,8 +87,17 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady }: BoidsCa
       let lastCountUpdate = 0;
 
       const animate = () => {
+        const p = paramsRef.current;
+
+        // boidCount 変更時に配列を増減する
+        if (boids.length < p.boidCount) {
+          boids.push(...spawnBoidsAtEdge(p.boidCount - boids.length, canvas.width, canvas.height));
+        } else if (boids.length > p.boidCount) {
+          boids.splice(p.boidCount);
+        }
+
         // 捕食者を更新
-        predator.update(boids, canvas.width, canvas.height);
+        predator.update(boids, canvas.width, canvas.height, p.predatorSpeed, p.predatorMaxForce);
 
         // 捕食範囲内の Boid を配列から除去
         const eaten = predator.eat(boids, canvas.width, canvas.height);
@@ -96,7 +112,7 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady }: BoidsCa
 
         // 各 Boid を更新
         for (const boid of boids) {
-          boid.update(boids, predator, canvas.width, canvas.height);
+          boid.update(boids, predator, canvas.width, canvas.height, p.maxSpeed, p.maxForce);
         }
 
         // レンダラーで描画（Boid・捕食者・CRT オーバーレイ）

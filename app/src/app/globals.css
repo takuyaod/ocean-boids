@@ -18,6 +18,14 @@ body {
   overflow: hidden;
 }
 
+/* スライダーサムのカラーをCSS変数で制御 */
+input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--thumb-color, #fff);
+}
+input[type="range"]::-moz-range-thumb {
+  background-color: var(--thumb-color, #fff);
+}
+
 /* CRTモニター風のグロウエフェクト */
 canvas {
   display: block;
