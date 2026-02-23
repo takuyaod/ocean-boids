@@ -10,8 +10,8 @@ const pressStart2P = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "BOIDS",
-  description: "Boids simulation — インベーダーゲーム風群れシミュレーション",
+  title: "OCEAN-BOIDS",
+  description: "Ocean Boids — 海洋生物の群れシミュレーション",
 };
 
 export default function RootLayout({
