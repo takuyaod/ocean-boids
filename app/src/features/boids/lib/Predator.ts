@@ -125,6 +125,7 @@ export class Predator {
     const effectiveMaxForce = PREDATOR_MAX_FORCE * speedMultiplier;
 
     // 1回の走査で追尾力と捕食対象を計算（chase/eat の重複計算を統合）
+    // しびれ中も捕食スキャンは実行する（停止中にクラゲと接触した場合も満腹度を増加し、しびれ時間をリセットする仕様）
     const { steer, eaten } = this.scanBoids(boids, width, height, effectiveSpeed, effectiveMaxForce);
 
     // クラゲを捕食したらしびれ状態にする（既にしびれ中でも時間をリセット）

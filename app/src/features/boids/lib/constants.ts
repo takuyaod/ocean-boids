@@ -251,10 +251,12 @@ export const DEFAULT_SIM_PARAMS: SimParams = {
 };
 
 // しびれエフェクトのパラメータ
-export const PREDATOR_STUN_DURATION_MS = 3000;      // しびれ持続時間（ミリ秒）
-export const PREDATOR_STUN_DOT_COUNT   = 6;         // しびれエフェクトのドット数
-export const PREDATOR_STUN_DOT_ORBIT   = 28;        // ドットの回転軌道半径（px）
-export const PREDATOR_STUN_COLOR       = '#ffee00'; // しびれエフェクトの色（黄色）
+export const PREDATOR_STUN_DURATION_MS  = 3000;      // しびれ持続時間（ミリ秒）
+export const PREDATOR_STUN_DOT_COUNT    = 6;         // しびれエフェクトのドット数
+export const PREDATOR_STUN_DOT_ORBIT    = 28;        // ドットの回転軌道半径（px）
+export const PREDATOR_STUN_DOT_RADIUS   = 3;         // ドットの描画半径（px）
+export const PREDATOR_STUN_ORBIT_WOBBLE = 4;         // 軌道半径の振動幅（px）しびれ感を演出
+export const PREDATOR_STUN_COLOR: `#${string}` = '#ffee00'; // しびれエフェクトの色（黄色）
 
 // ── CRTエフェクトのパラメータ ─────────────────────────────────────────────
 

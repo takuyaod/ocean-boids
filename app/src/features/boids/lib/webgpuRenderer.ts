@@ -12,6 +12,8 @@ import {
   PREDATOR_STUN_COLOR,
   PREDATOR_STUN_DOT_COUNT,
   PREDATOR_STUN_DOT_ORBIT,
+  PREDATOR_STUN_DOT_RADIUS,
+  PREDATOR_STUN_ORBIT_WOBBLE,
   CRT_SCANLINE_INTERVAL,
   CRT_SCANLINE_OPACITY,
   CRT_VIGNETTE_INNER_RADIUS,
@@ -60,6 +62,9 @@ const SHARK_PIXEL_OFFSETS = computeFilledPixels(SHARK_SPRITE, PREDATOR_PIXEL_SIZ
 
 // しびれドット用：オフセット(0,0)の1点スプライト
 const STUN_DOT_PIXEL_OFFSETS: PixelOffset[] = [{ ox: 0, oy: 0 }];
+
+// しびれエフェクトのドット色をモジュール初期化時に1回だけ変換してキャッシュ
+const STUN_DOT_RGB = hexToRgb(PREDATOR_STUN_COLOR);
 
 // ────── バッファレイアウト定数 ─────────────────────────────────────────────
 
@@ -388,17 +393,17 @@ export class WebGPURenderer implements BoidsRenderer {
     // しびれ中は黄色ドットエフェクトを描画
     if (predator.isStunned) {
       const now = performance.now();
-      const [dr, dg, db] = hexToRgb(PREDATOR_STUN_COLOR);
+      const [dr, dg, db] = STUN_DOT_RGB;
       // sin 波による点滅（0.7〜1.0 の範囲でアルファを変化）
       const blink = 0.7 + 0.3 * (0.5 + 0.5 * Math.sin(now * 0.01));
       for (let i = 0; i < PREDATOR_STUN_DOT_COUNT; i++) {
         // フレームごとに回転し、各ドットを等間隔に配置
         const angle = now * 0.003 + (i * Math.PI * 2) / PREDATOR_STUN_DOT_COUNT;
         // 振動で軌道半径をわずかに変化させてしびれ感を演出
-        const orbit = PREDATOR_STUN_DOT_ORBIT + 4 * Math.sin(now * 0.008 + i);
+        const orbit = PREDATOR_STUN_DOT_ORBIT + PREDATOR_STUN_ORBIT_WOBBLE * Math.sin(now * 0.008 + i);
         const dotX  = predator.x + Math.cos(angle) * orbit;
         const dotY  = predator.y + Math.sin(angle) * orbit;
-        addSprite(dotX, dotY, 0, STUN_DOT_PIXEL_OFFSETS, 3, dr, dg, db, blink);
+        addSprite(dotX, dotY, 0, STUN_DOT_PIXEL_OFFSETS, PREDATOR_STUN_DOT_RADIUS, dr, dg, db, blink);
       }
     }
 
