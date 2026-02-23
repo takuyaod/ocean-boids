@@ -148,12 +148,19 @@ export const COHESION_WEIGHT   = 1.0;
 export const PREDATOR_COUNT      = 1;        // 捕食者の数
 export const PREDATOR_PIXEL_SIZE = 5;        // サメのスプライトピクセルサイズ
 export const PREDATOR_COLOR      = '#ff2200'; // 脅威を示す赤
-export const PREDATOR_SPEED      = 2.8;      // 最大速度（Boidより速い）
-export const PREDATOR_MAX_FORCE  = 0.05;     // 最大操舵力
+export const PREDATOR_SPEED      = 2.8;      // 基本最大速度（Boidより速い）
+export const PREDATOR_MAX_FORCE  = 0.05;     // 基本最大操舵力
 export const PREDATOR_FLEE_RADIUS      = 160; // Boidが逃げ始める距離
 export const PREDATOR_FLEE_WEIGHT      = 3.5; // 逃避力の重み
 export const PREDATOR_FLEE_FORCE_SCALE = 4;   // 逃避時の最大操舵力スケール（通常のmaxForceの倍率）
 export const PREDATOR_EAT_RADIUS       = 15;  // 捕食判定の距離閾値
+
+// 満腹度システムのデフォルト値
+export const PREDATOR_SPEEDUP_THRESHOLD = 3;     // スピードアップが始まる捕食数
+export const PREDATOR_OVERFED_THRESHOLD = 8;    // スピードダウンが始まる捕食数
+export const PREDATOR_SATIETY_DECAY_RATE = 0.003; // フレームあたりの満腹度自然減少量
+export const PREDATOR_SPEED_BOOST        = 1.5;  // スピードアップ時の速度倍率
+export const PREDATOR_SPEED_PENALTY      = 0.5;  // スピードダウン時の速度倍率
 
 // ── シミュレーションパラメータ（動的調整用） ──────────────────────────────
 
@@ -161,16 +168,22 @@ export type SimParams = {
   boidCount: number;
   maxSpeed: number;
   maxForce: number;
-  predatorSpeed: number;
-  predatorMaxForce: number;
+  predatorSpeedupThreshold: number;
+  predatorOverfedThreshold: number;
+  predatorSatietyDecayRate: number;
+  predatorSpeedBoost: number;
+  predatorSpeedPenalty: number;
 };
 
 export const DEFAULT_SIM_PARAMS: SimParams = {
   boidCount: BOID_COUNT,
   maxSpeed: MAX_SPEED,
   maxForce: MAX_FORCE,
-  predatorSpeed: PREDATOR_SPEED,
-  predatorMaxForce: PREDATOR_MAX_FORCE,
+  predatorSpeedupThreshold: PREDATOR_SPEEDUP_THRESHOLD,
+  predatorOverfedThreshold: PREDATOR_OVERFED_THRESHOLD,
+  predatorSatietyDecayRate: PREDATOR_SATIETY_DECAY_RATE,
+  predatorSpeedBoost: PREDATOR_SPEED_BOOST,
+  predatorSpeedPenalty: PREDATOR_SPEED_PENALTY,
 };
 
 // ── CRTエフェクトのパラメータ ─────────────────────────────────────────────

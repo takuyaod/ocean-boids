@@ -1,10 +1,13 @@
 'use client';
 
+import { memo } from 'react';
 import type { SimParams } from '../lib/constants';
 
 type ParamsPanelProps = {
   params: SimParams;
   onChange: (params: SimParams) => void;
+  // 読み取り専用の状態表示（操作UIとモニタリング表示を型で明示）
+  readonlyStats?: { satiety: number };
 };
 
 // スライダー1行分のコンポーネント
@@ -40,7 +43,9 @@ function SliderRow({ label, value, min, max, step, color, display, onChange }: S
   );
 }
 
-export default function ParamsPanel({ params, onChange }: ParamsPanelProps) {
+const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats }: ParamsPanelProps) {
+  const satiety = readonlyStats?.satiety ?? 0;
+
   return (
     <div className="font-mono text-xs bg-[#0d0d0d] flex flex-col border-t border-[#333]">
       {/* ヘッダー */}
@@ -85,27 +90,78 @@ export default function ParamsPanel({ params, onChange }: ParamsPanelProps) {
       {/* 捕食者セクション */}
       <div className="border-t border-[#333] px-3 py-2 flex flex-col gap-2.5">
         <div className="text-[#555] text-[10px]">── PREDATOR</div>
+
+        {/* 満腹度（読み取り専用表示） */}
+        <div className="flex justify-between items-center">
+          <span className="text-[#666] text-[10px]">satiety</span>
+          <span className="text-[10px] shrink-0 text-[#ff2200]">{satiety.toFixed(1)}</span>
+        </div>
+
         <SliderRow
-          label="speed"
-          value={params.predatorSpeed}
-          min={0.5}
-          max={5.0}
-          step={0.1}
-          color="#ff2200"
-          display={params.predatorSpeed.toFixed(1)}
-          onChange={(v) => onChange({ ...params, predatorSpeed: v })}
+          label="speedup_threshold"
+          value={params.predatorSpeedupThreshold}
+          min={1}
+          max={15}
+          step={1}
+          color="#ff6600"
+          display={String(params.predatorSpeedupThreshold)}
+          onChange={(v) => {
+            // speedupThreshold が overfedThreshold 以上にならないよう連動して調整
+            const newOverfed = v >= params.predatorOverfedThreshold
+              ? v + 1
+              : params.predatorOverfedThreshold;
+            onChange({ ...params, predatorSpeedupThreshold: v, predatorOverfedThreshold: newOverfed });
+          }}
         />
         <SliderRow
-          label="max_force"
-          value={params.predatorMaxForce}
-          min={0.01}
-          max={0.20}
-          step={0.01}
-          color="#ff2200"
-          display={params.predatorMaxForce.toFixed(2)}
-          onChange={(v) => onChange({ ...params, predatorMaxForce: v })}
+          label="overfed_threshold"
+          value={params.predatorOverfedThreshold}
+          min={2}
+          max={20}
+          step={1}
+          color="#ff6600"
+          display={String(params.predatorOverfedThreshold)}
+          onChange={(v) => {
+            // overfedThreshold が speedupThreshold 以下にならないよう連動して調整
+            const newSpeedup = v <= params.predatorSpeedupThreshold
+              ? v - 1
+              : params.predatorSpeedupThreshold;
+            onChange({ ...params, predatorOverfedThreshold: v, predatorSpeedupThreshold: newSpeedup });
+          }}
+        />
+        <SliderRow
+          label="satiety_decay_rate"
+          value={params.predatorSatietyDecayRate}
+          min={0.001}
+          max={0.020}
+          step={0.001}
+          color="#ff6600"
+          display={params.predatorSatietyDecayRate.toFixed(3)}
+          onChange={(v) => onChange({ ...params, predatorSatietyDecayRate: v })}
+        />
+        <SliderRow
+          label="speed_boost"
+          value={params.predatorSpeedBoost}
+          min={1.0}
+          max={3.0}
+          step={0.1}
+          color="#ff6600"
+          display={params.predatorSpeedBoost.toFixed(1)}
+          onChange={(v) => onChange({ ...params, predatorSpeedBoost: v })}
+        />
+        <SliderRow
+          label="speed_penalty"
+          value={params.predatorSpeedPenalty}
+          min={0.1}
+          max={0.9}
+          step={0.1}
+          color="#ff6600"
+          display={params.predatorSpeedPenalty.toFixed(1)}
+          onChange={(v) => onChange({ ...params, predatorSpeedPenalty: v })}
         />
       </div>
     </div>
   );
-}
+});
+
+export default ParamsPanel;

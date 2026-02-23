@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Boid } from '../lib/Boid';
-import { Predator } from '../lib/Predator';
+import { Predator, type SatietyParams } from '../lib/Predator';
 import { type SimParams, DEFAULT_SIM_PARAMS } from '../lib/constants';
 import { spawnBoidsAtEdge } from '../lib/spawnUtils';
 import { type SpeciesCounts, createEmptySpeciesCounts } from '../lib/speciesUtils';
@@ -14,6 +14,7 @@ export type { SpeciesCounts };
 type BoidsCanvasProps = {
   onCountsUpdate?: (counts: SpeciesCounts) => void;
   onRendererReady?: (type: RendererType) => void;
+  onSatietyUpdate?: (satiety: number) => void;
   params?: SimParams;
 };
 
@@ -26,7 +27,7 @@ function buildSpeciesCounts(boids: Boid[]): SpeciesCounts {
   return counts;
 }
 
-export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }: BoidsCanvasProps) {
+export default function BoidsCanvas({ onCountsUpdate, onRendererReady, onSatietyUpdate, params }: BoidsCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -35,6 +36,11 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }:
   useEffect(() => {
     onCountsUpdateRef.current = onCountsUpdate;
   }, [onCountsUpdate]);
+
+  const onSatietyUpdateRef = useRef(onSatietyUpdate);
+  useEffect(() => {
+    onSatietyUpdateRef.current = onSatietyUpdate;
+  }, [onSatietyUpdate]);
 
   // パラメータの最新参照を保持（アニメーションループの再起動を防ぐ）
   const paramsRef = useRef<SimParams>(params ?? DEFAULT_SIM_PARAMS);
@@ -96,11 +102,15 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }:
           boids.splice(p.boidCount);
         }
 
-        // 捕食者を更新
-        predator.update(boids, canvas.width, canvas.height, p.predatorSpeed, p.predatorMaxForce);
-
-        // 捕食範囲内の Boid を配列から除去
-        const eaten = predator.eat(boids, canvas.width, canvas.height);
+        // 捕食者を更新し、捕食されたBoidを取得（1回の走査で追尾と捕食を処理）
+        const satietyParams: SatietyParams = {
+          speedupThreshold: p.predatorSpeedupThreshold,
+          overfedThreshold: p.predatorOverfedThreshold,
+          satietyDecayRate: p.predatorSatietyDecayRate,
+          speedBoost: p.predatorSpeedBoost,
+          speedPenalty: p.predatorSpeedPenalty,
+        };
+        const eaten = predator.update(boids, canvas.width, canvas.height, satietyParams);
         if (eaten.size > 0) {
           // 後ろから削除することでインデックスのずれを防ぐ
           for (let i = boids.length - 1; i >= 0; i--) {
@@ -118,11 +128,12 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady, params }:
         // レンダラーで描画（Boid・捕食者・CRT オーバーレイ）
         renderer!.render(boids, predator);
 
-        // 500ms ごとに種別ごとの個体数をカウントして通知
+        // 500ms ごとに種別ごとの個体数と満腹度を通知
         const now = performance.now();
-        if (onCountsUpdateRef.current && now - lastCountUpdate >= 500) {
+        if (now - lastCountUpdate >= 500) {
           lastCountUpdate = now;
-          onCountsUpdateRef.current(buildSpeciesCounts(boids));
+          onCountsUpdateRef.current?.(buildSpeciesCounts(boids));
+          onSatietyUpdateRef.current?.(predator.satiety);
         }
 
         animId = requestAnimationFrame(animate);
