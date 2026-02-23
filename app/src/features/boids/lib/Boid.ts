@@ -20,15 +20,15 @@ export class Boid {
   // 種固有パラメータをキャッシュ（this.species は不変なため、毎フレームの SPECIES_PARAMS ルックアップを排除）
   private readonly params: SpeciesParams;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, species?: BoidSpecies) {
     this.x = x;
     this.y = y;
     // 初期速度は定数 MAX_SPEED を使用（スポーン時点では動的パラメータを参照しない設計）
     const angle = Math.random() * Math.PI * 2;
     this.vx = Math.cos(angle) * MAX_SPEED;
     this.vy = Math.sin(angle) * MAX_SPEED;
-    // 重み付きランダムで種を割り当て（イワシ多め）
-    this.species = getRandomSpecies();
+    // 種が指定されていれば使用し、なければ重み付きランダムで割り当て
+    this.species = species ?? getRandomSpecies();
     this.params = SPECIES_PARAMS[this.species];
   }
 

@@ -5,6 +5,7 @@ import {
   PREDATOR_MAX_FORCE,
   PREDATOR_EAT_RADIUS,
   PREDATOR_STUN_DURATION_MS,
+  PREDATOR_JELLYFISH_COOLDOWN_MS,
 } from './constants';
 import { Vec2, magnitude, normalize, limit } from './vec2';
 
@@ -26,6 +27,8 @@ export class Predator {
   private _satiety: number;
   // しびれ終了時刻（performance.now() ベース。0 = しびれなし）
   private _stunnedUntil: number;
+  // クラゲ捕食後の再捕食クールダウン終了時刻（0 = クールダウンなし）
+  private _jellyfishCooldownUntil: number;
 
   get satiety(): number {
     return this._satiety;
@@ -41,6 +44,7 @@ export class Predator {
     this.y = y;
     this._satiety = 0;
     this._stunnedUntil = 0;
+    this._jellyfishCooldownUntil = 0;
     // 初期速度は定数 PREDATOR_SPEED を使用（スポーン時点では動的パラメータを参照しない設計）
     const angle = Math.random() * Math.PI * 2;
     this.vx = Math.cos(angle) * PREDATOR_SPEED;
@@ -124,14 +128,20 @@ export class Predator {
     const effectiveSpeed    = PREDATOR_SPEED    * speedMultiplier;
     const effectiveMaxForce = PREDATOR_MAX_FORCE * speedMultiplier;
 
-    // 1回の走査で追尾力と捕食対象を計算（chase/eat の重複計算を統合）
-    // しびれ中も捕食スキャンは実行する（停止中にクラゲと接触した場合も満腹度を増加し、しびれ時間をリセットする仕様）
-    const { steer, eaten } = this.scanBoids(boids, width, height, effectiveSpeed, effectiveMaxForce);
+    // クールダウン中はクラゲを追跡・捕食対象から除外する
+    const activeBoids = now < this._jellyfishCooldownUntil
+      ? boids.filter(b => b.species !== BoidSpecies.Jellyfish)
+      : boids;
 
-    // クラゲを捕食したらしびれ状態にする（既にしびれ中でも時間をリセット）
+    // 1回の走査で追尾力と捕食対象を計算（chase/eat の重複計算を統合）
+    // しびれ中も捕食スキャンは実行する（停止中にクラゲと接触した場合もしびれ時間をリセットする仕様）
+    const { steer, eaten } = this.scanBoids(activeBoids, width, height, effectiveSpeed, effectiveMaxForce);
+
+    // クラゲを捕食したらしびれ状態とクールダウンをセット（満腹度は加算しない）
     for (const boid of eaten) {
       if (boid.species === BoidSpecies.Jellyfish) {
         this._stunnedUntil = now + PREDATOR_STUN_DURATION_MS;
+        this._jellyfishCooldownUntil = now + PREDATOR_JELLYFISH_COOLDOWN_MS;
         break;
       }
     }
@@ -158,8 +168,12 @@ export class Predator {
       if (this.y > height) this.y -= height;
     }
 
-    // 捕食した数だけ満腹度を増加
-    this._satiety += eaten.size;
+    // クラゲ以外の捕食のみ満腹度を増加（クラゲは栄養にならない）
+    for (const boid of eaten) {
+      if (boid.species !== BoidSpecies.Jellyfish) {
+        this._satiety += 1;
+      }
+    }
     // 満腹度を自然減少（最小値は 0）
     this._satiety = Math.max(0, this._satiety - satietyDecayRate);
 

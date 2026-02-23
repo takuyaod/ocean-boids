@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react';
 import { Boid } from '../lib/Boid';
 import { Predator, type SatietyParams } from '../lib/Predator';
 import { type SimParams, DEFAULT_SIM_PARAMS } from '../lib/constants';
-import { spawnBoidsAtEdge } from '../lib/spawnUtils';
-import { type SpeciesCounts, createEmptySpeciesCounts } from '../lib/speciesUtils';
+import { spawnBoidsAtEdge, spawnBoidAtEdge } from '../lib/spawnUtils';
+import { type SpeciesCounts, createEmptySpeciesCounts, getSpawnSpecies } from '../lib/speciesUtils';
 import { createRenderer, type BoidsRenderer, type RendererType } from '../lib/renderer';
 
 export type { SpeciesCounts };
@@ -116,8 +116,13 @@ export default function BoidsCanvas({ onCountsUpdate, onRendererReady, onSatiety
           for (let i = boids.length - 1; i >= 0; i--) {
             if (eaten.has(boids[i])) boids.splice(i, 1);
           }
-          // 捕食された数だけ画面端に新しい Boid を再スポーン
-          boids.push(...spawnBoidsAtEdge(eaten.size, canvas.width, canvas.height));
+          // 捕食された数だけ画面端に新しい Boid を再スポーン（種別バランスを考慮）
+          const currentCounts = buildSpeciesCounts(boids);
+          for (let i = 0; i < eaten.size; i++) {
+            const species = getSpawnSpecies(currentCounts, boids.length + i);
+            currentCounts[species]++;
+            boids.push(spawnBoidAtEdge(species, canvas.width, canvas.height));
+          }
         }
 
         // 各 Boid を更新

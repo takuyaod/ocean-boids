@@ -222,7 +222,7 @@ export const PREDATOR_EAT_RADIUS       = 15;  // 捕食判定の距離閾値
 // 満腹度システムのデフォルト値
 export const PREDATOR_SPEEDUP_THRESHOLD = 3;     // スピードアップが始まる捕食数
 export const PREDATOR_OVERFED_THRESHOLD = 8;    // スピードダウンが始まる捕食数
-export const PREDATOR_SATIETY_DECAY_RATE = 0.003; // フレームあたりの満腹度自然減少量
+export const PREDATOR_SATIETY_DECAY_RATE = 0.008; // フレームあたりの満腹度自然減少量
 export const PREDATOR_SPEED_BOOST        = 1.5;  // スピードアップ時の速度倍率
 export const PREDATOR_SPEED_PENALTY      = 0.5;  // スピードダウン時の速度倍率
 
@@ -249,6 +249,9 @@ export const DEFAULT_SIM_PARAMS: SimParams = {
   predatorSpeedBoost: PREDATOR_SPEED_BOOST,
   predatorSpeedPenalty: PREDATOR_SPEED_PENALTY,
 };
+
+// クラゲ捕食後の再捕食クールダウン時間（ミリ秒）
+export const PREDATOR_JELLYFISH_COOLDOWN_MS = 12000;
 
 // しびれエフェクトのパラメータ
 export const PREDATOR_STUN_DURATION_MS  = 3000;      // しびれ持続時間（ミリ秒）
