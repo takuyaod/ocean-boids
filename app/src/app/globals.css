@@ -35,3 +35,25 @@ canvas {
   display: block;
   image-rendering: pixelated;
 }
+
+/* ターミナル風スクロールバー（ダーク・細め）*/
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111111;
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Firefox 向け scrollbar-color */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #111111;
+}
