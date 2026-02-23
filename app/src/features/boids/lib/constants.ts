@@ -134,16 +134,6 @@ export const BOID_COUNT = 60;  // Boidの総数
 export const MAX_SPEED = 2.0;  // デフォルト最大速度（種固有パラメータのスケール基準）
 export const MAX_FORCE = 0.04; // デフォルト最大操舵力（種固有パラメータのスケール基準）
 
-// デフォルト近傍範囲（種固有パラメータがない場合のフォールバック）
-export const SEPARATION_RADIUS = 35;
-export const ALIGNMENT_RADIUS  = 75;
-export const COHESION_RADIUS   = 75;
-
-// デフォルト重み（種固有パラメータがない場合のフォールバック）
-export const SEPARATION_WEIGHT = 1.8;
-export const ALIGNMENT_WEIGHT  = 1.0;
-export const COHESION_WEIGHT   = 1.0;
-
 // ── 種固有のフロッキングパラメータ ───────────────────────────────────────
 
 export type SpeciesParams = {
@@ -177,12 +167,13 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     fleeWeight: 3.0,       intraSpeciesBias: 3.0,
   },
   // タコ：孤立傾向が強い知性的な頭足類
+  // alignmentWeight/cohesionWeight が極めて小さいため、intraSpeciesBias は 1.0（バイアスなし）で十分な孤立行動を実現できる
   [BoidSpecies.Octopus]: {
     maxSpeed: 1.5,   maxForce: 0.03,
     separationRadius: 65,  separationWeight: 2.5,
     alignmentRadius: 50,   alignmentWeight: 0.15,
     cohesionRadius: 50,    cohesionWeight: 0.1,
-    fleeWeight: 2.5,       intraSpeciesBias: 0.3,
+    fleeWeight: 2.5,       intraSpeciesBias: 1.0,
   },
   // カニ：ゆっくりと移動する甲殻類
   [BoidSpecies.Crab]: {
@@ -225,7 +216,6 @@ export const PREDATOR_COLOR      = '#ff2200'; // 脅威を示す赤
 export const PREDATOR_SPEED      = 2.8;      // 基本最大速度（Boidより速い）
 export const PREDATOR_MAX_FORCE  = 0.05;     // 基本最大操舵力
 export const PREDATOR_FLEE_RADIUS      = 160; // Boidが逃げ始める距離
-export const PREDATOR_FLEE_WEIGHT      = 3.5; // 逃避力の重み
 export const PREDATOR_FLEE_FORCE_SCALE = 4;   // 逃避時の最大操舵力スケール（通常のmaxForceの倍率）
 export const PREDATOR_EAT_RADIUS       = 15;  // 捕食判定の距離閾値
 

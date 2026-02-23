@@ -6,6 +6,7 @@ import {
   PREDATOR_FLEE_RADIUS,
   PREDATOR_FLEE_FORCE_SCALE,
   SPECIES_PARAMS,
+  type SpeciesParams,
 } from './constants';
 import { Vec2, magnitude, normalize, limit } from './vec2';
 import type { Predator } from './Predator';
@@ -16,6 +17,8 @@ export class Boid {
   vx: number;
   vy: number;
   species: BoidSpecies;
+  // 種固有パラメータをキャッシュ（this.species は不変なため、毎フレームの SPECIES_PARAMS ルックアップを排除）
+  private readonly params: SpeciesParams;
 
   constructor(x: number, y: number) {
     this.x = x;
@@ -26,11 +29,12 @@ export class Boid {
     this.vy = Math.sin(angle) * MAX_SPEED;
     // 重み付きランダムで種を割り当て（イワシ多め）
     this.species = getRandomSpecies();
+    this.params = SPECIES_PARAMS[this.species];
   }
 
   // 分離ルール：近くのBoidから離れる（種固有の分離半径を使用、全種に対して適用）
   private separate(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { separationRadius } = SPECIES_PARAMS[this.species];
+    const { separationRadius } = this.params;
     let sx = 0, sy = 0, count = 0;
     for (const other of boids) {
       if (other === this) continue;
@@ -41,6 +45,8 @@ export class Boid {
         // 距離に反比例した反発力を計算
         sx += (dx / dist) / dist;
         sy += (dy / dist) / dist;
+        // 分離は全種を等しく扱うため totalWeight ではなく count を使用
+        // （align/cohere と異なり intraSpeciesBias による重み付けを行わない）
         count++;
       }
     }
@@ -51,7 +57,7 @@ export class Boid {
 
   // 整列ルール：近くのBoidの進行方向に合わせる（同種ボイドを intraSpeciesBias 倍で優先）
   private align(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { alignmentRadius, intraSpeciesBias } = SPECIES_PARAMS[this.species];
+    const { alignmentRadius, intraSpeciesBias } = this.params;
     let avx = 0, avy = 0, totalWeight = 0;
     for (const other of boids) {
       if (other === this) continue;
@@ -87,7 +93,7 @@ export class Boid {
 
   // 結合ルール：近くのBoidの重心に向かう（同種ボイドを intraSpeciesBias 倍で優先）
   private cohere(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { cohesionRadius, intraSpeciesBias } = SPECIES_PARAMS[this.species];
+    const { cohesionRadius, intraSpeciesBias } = this.params;
     let cx = 0, cy = 0, totalWeight = 0;
     for (const other of boids) {
       if (other === this) continue;
@@ -110,7 +116,7 @@ export class Boid {
 
   // 位置・速度を更新する
   update(boids: Boid[], predator: Predator, width: number, height: number, maxSpeed: number, maxForce: number): void {
-    const params = SPECIES_PARAMS[this.species];
+    const params = this.params;
     // グローバルの SimParams を比率として種固有パラメータにスケール適用
     // （SimParams スライダーで全種を一括調整しつつ、種間の相対差を保持する）
     const effectiveMaxSpeed = params.maxSpeed * (maxSpeed / MAX_SPEED);
