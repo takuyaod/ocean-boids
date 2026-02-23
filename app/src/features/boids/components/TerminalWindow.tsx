@@ -12,6 +12,7 @@ export default function TerminalWindow() {
   const [counts, setCounts] = useState<SpeciesCounts>(createEmptySpeciesCounts);
   const [rendererType, setRendererType] = useState<RendererType | null>(null);
   const [simParams, setSimParams] = useState<SimParams>(DEFAULT_SIM_PARAMS);
+  const [satiety, setSatiety] = useState<number>(0);
 
   return (
     // ページ全体：暗いグレー背景
@@ -63,6 +64,7 @@ export default function TerminalWindow() {
               <BoidsCanvas
                 onCountsUpdate={setCounts}
                 onRendererReady={setRendererType}
+                onSatietyUpdate={setSatiety}
                 params={simParams}
               />
             </div>
@@ -71,7 +73,7 @@ export default function TerminalWindow() {
           {/* ── 右側：POPULATION + PARAMS サイドバー ── */}
           <div className="w-44 shrink-0 border-l border-[#333] flex flex-col min-h-0">
             <PopulationPanel counts={counts} sharkCount={PREDATOR_COUNT} />
-            <ParamsPanel params={simParams} onChange={setSimParams} />
+            <ParamsPanel params={simParams} onChange={setSimParams} satiety={satiety} />
           </div>
         </div>
 

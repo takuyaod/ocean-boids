@@ -5,6 +5,7 @@ import type { SimParams } from '../lib/constants';
 type ParamsPanelProps = {
   params: SimParams;
   onChange: (params: SimParams) => void;
+  satiety?: number;
 };
 
 // スライダー1行分のコンポーネント
@@ -40,7 +41,7 @@ function SliderRow({ label, value, min, max, step, color, display, onChange }: S
   );
 }
 
-export default function ParamsPanel({ params, onChange }: ParamsPanelProps) {
+export default function ParamsPanel({ params, onChange, satiety = 0 }: ParamsPanelProps) {
   return (
     <div className="font-mono text-xs bg-[#0d0d0d] flex flex-col border-t border-[#333]">
       {/* ヘッダー */}
@@ -85,25 +86,62 @@ export default function ParamsPanel({ params, onChange }: ParamsPanelProps) {
       {/* 捕食者セクション */}
       <div className="border-t border-[#333] px-3 py-2 flex flex-col gap-2.5">
         <div className="text-[#555] text-[10px]">── PREDATOR</div>
+
+        {/* 満腹度（読み取り専用表示） */}
+        <div className="flex justify-between items-center">
+          <span className="text-[#666] text-[10px]">satiety</span>
+          <span className="text-[10px] shrink-0 text-[#ff2200]">{satiety.toFixed(1)}</span>
+        </div>
+
         <SliderRow
-          label="speed"
-          value={params.predatorSpeed}
-          min={0.5}
-          max={5.0}
-          step={0.1}
-          color="#ff2200"
-          display={params.predatorSpeed.toFixed(1)}
-          onChange={(v) => onChange({ ...params, predatorSpeed: v })}
+          label="speedup_threshold"
+          value={params.speedupThreshold}
+          min={1}
+          max={15}
+          step={1}
+          color="#ff6600"
+          display={String(params.speedupThreshold)}
+          onChange={(v) => onChange({ ...params, speedupThreshold: v })}
         />
         <SliderRow
-          label="max_force"
-          value={params.predatorMaxForce}
-          min={0.01}
-          max={0.20}
-          step={0.01}
-          color="#ff2200"
-          display={params.predatorMaxForce.toFixed(2)}
-          onChange={(v) => onChange({ ...params, predatorMaxForce: v })}
+          label="overfed_threshold"
+          value={params.overfedThreshold}
+          min={2}
+          max={20}
+          step={1}
+          color="#ff6600"
+          display={String(params.overfedThreshold)}
+          onChange={(v) => onChange({ ...params, overfedThreshold: v })}
+        />
+        <SliderRow
+          label="satiety_decay"
+          value={params.satietyDecayRate}
+          min={0.001}
+          max={0.020}
+          step={0.001}
+          color="#ff6600"
+          display={params.satietyDecayRate.toFixed(3)}
+          onChange={(v) => onChange({ ...params, satietyDecayRate: v })}
+        />
+        <SliderRow
+          label="speed_boost"
+          value={params.speedBoost}
+          min={1.0}
+          max={3.0}
+          step={0.1}
+          color="#ff6600"
+          display={params.speedBoost.toFixed(1)}
+          onChange={(v) => onChange({ ...params, speedBoost: v })}
+        />
+        <SliderRow
+          label="speed_penalty"
+          value={params.speedPenalty}
+          min={0.1}
+          max={0.9}
+          step={0.1}
+          color="#ff6600"
+          display={params.speedPenalty.toFixed(1)}
+          onChange={(v) => onChange({ ...params, speedPenalty: v })}
         />
       </div>
     </div>
