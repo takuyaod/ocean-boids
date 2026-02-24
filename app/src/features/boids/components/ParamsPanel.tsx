@@ -2,6 +2,7 @@
 
 import { memo } from 'react';
 import type { SimParams } from '../lib/constants';
+import Tooltip from './Tooltip';
 
 type ParamsPanelProps = {
   params: SimParams;
@@ -10,9 +11,23 @@ type ParamsPanelProps = {
   readonlyStats?: { satiety: number };
 };
 
+// パラメータのツールチップテキスト（PopulationPanel の SPECIES_DISPLAY_ORDER / SHARK_TOOLTIP と同じ方針でデータを一元管理）
+const PARAMS_TOOLTIPS = {
+  boidCount: '各種ボイドの初期個体数。変更するとシミュレーションをリセット',
+  maxSpeed: 'ボイド全種の最高速度の倍率（種固有の値にこの倍率をかける）',
+  maxForce: 'ボイド全種の最大操舵力の倍率（向き変更の素早さに影響）',
+  satiety: 'サメの現在の満腹度。捕食するごとに増加し、時間とともに減少',
+  speedupThreshold: '満腹度がこの値を超えるとサメが加速する閾値',
+  overfedThreshold: '満腹度がこの値を超えるとサメが減速する（過食）閾値',
+  satietyDecayRate: '毎フレームの満腹度の減少量。大きいほど空腹になりやすい',
+  speedBoost: '空腹時（speedup_threshold 超）のサメの速度倍率',
+  speedPenalty: '過食時（overfed_threshold 超）のサメの速度倍率',
+} as const;
+
 // スライダー1行分のコンポーネント
 type SliderRowProps = {
   label: string;
+  tooltip: string;
   value: number;
   min: number;
   max: number;
@@ -22,24 +37,45 @@ type SliderRowProps = {
   onChange: (value: number) => void;
 };
 
-function SliderRow({ label, value, min, max, step, color, display, onChange }: SliderRowProps) {
+function SliderRow({ label, tooltip, value, min, max, step, color, display, onChange }: SliderRowProps) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex justify-between items-center">
+    <Tooltip content={tooltip}>
+      <div className="flex flex-col gap-0.5 cursor-default">
+        <div className="flex justify-between items-center">
+          <span className="text-[#666] text-[10px]">{label}</span>
+          <span className="text-[10px] shrink-0" style={{ color }}>{display}</span>
+        </div>
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-runnable-track]:h-px [&::-webkit-slider-runnable-track]:bg-[#444] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:-mt-0.75 [&::-moz-range-track]:h-px [&::-moz-range-track]:bg-[#444] [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+          style={{ '--thumb-color': color, color } as React.CSSProperties}
+        />
+      </div>
+    </Tooltip>
+  );
+}
+
+// 読み取り専用の数値表示行（satiety など）
+type ReadonlyRowProps = {
+  label: string;
+  tooltip: string;
+  display: string;
+  color: `#${string}`;
+};
+
+function ReadonlyRow({ label, tooltip, display, color }: ReadonlyRowProps) {
+  return (
+    <Tooltip content={tooltip}>
+      <div className="flex justify-between items-center cursor-default">
         <span className="text-[#666] text-[10px]">{label}</span>
         <span className="text-[10px] shrink-0" style={{ color }}>{display}</span>
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full cursor-pointer appearance-none bg-transparent [&::-webkit-slider-runnable-track]:h-px [&::-webkit-slider-runnable-track]:bg-[#444] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:-mt-0.75 [&::-moz-range-track]:h-px [&::-moz-range-track]:bg-[#444] [&::-moz-range-thumb]:w-2 [&::-moz-range-thumb]:h-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
-        style={{ '--thumb-color': color, color } as React.CSSProperties}
-      />
-    </div>
+    </Tooltip>
   );
 }
 
@@ -57,6 +93,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
       <div className="px-3 py-2 flex flex-col gap-2.5">
         <SliderRow
           label="boid_count"
+          tooltip={PARAMS_TOOLTIPS.boidCount}
           value={params.boidCount}
           min={10}
           max={200}
@@ -67,6 +104,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="max_speed"
+          tooltip={PARAMS_TOOLTIPS.maxSpeed}
           value={params.maxSpeed}
           min={0.5}
           max={5.0}
@@ -77,6 +115,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="max_force"
+          tooltip={PARAMS_TOOLTIPS.maxForce}
           value={params.maxForce}
           min={0.01}
           max={0.20}
@@ -92,13 +131,16 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         <div className="text-[#555] text-[10px]">── PREDATOR</div>
 
         {/* 満腹度（読み取り専用表示） */}
-        <div className="flex justify-between items-center">
-          <span className="text-[#666] text-[10px]">satiety</span>
-          <span className="text-[10px] shrink-0 text-[#ff2200]">{satiety.toFixed(1)}</span>
-        </div>
+        <ReadonlyRow
+          label="satiety"
+          tooltip={PARAMS_TOOLTIPS.satiety}
+          display={satiety.toFixed(1)}
+          color="#ff2200"
+        />
 
         <SliderRow
           label="speedup_threshold"
+          tooltip={PARAMS_TOOLTIPS.speedupThreshold}
           value={params.predatorSpeedupThreshold}
           min={1}
           max={15}
@@ -115,6 +157,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="overfed_threshold"
+          tooltip={PARAMS_TOOLTIPS.overfedThreshold}
           value={params.predatorOverfedThreshold}
           min={2}
           max={20}
@@ -131,6 +174,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="satiety_decay_rate"
+          tooltip={PARAMS_TOOLTIPS.satietyDecayRate}
           value={params.predatorSatietyDecayRate}
           min={0.001}
           max={0.020}
@@ -141,6 +185,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="speed_boost"
+          tooltip={PARAMS_TOOLTIPS.speedBoost}
           value={params.predatorSpeedBoost}
           min={1.0}
           max={3.0}
@@ -151,6 +196,7 @@ const ParamsPanel = memo(function ParamsPanel({ params, onChange, readonlyStats 
         />
         <SliderRow
           label="speed_penalty"
+          tooltip={PARAMS_TOOLTIPS.speedPenalty}
           value={params.predatorSpeedPenalty}
           min={0.1}
           max={0.9}
