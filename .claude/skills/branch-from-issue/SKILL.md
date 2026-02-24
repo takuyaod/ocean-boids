@@ -1,3 +1,7 @@
+---
+description: Use when the user wants to create a git branch from a GitHub issue. Examples: "issue からブランチを作って", "issue #5 のブランチを作成", "ブランチを切って".
+---
+
 # Issue からブランチ作成スキル
 
 指定した GitHub issue の内容をもとにブランチを作成します。

@@ -1,3 +1,7 @@
+---
+description: Use when the user wants to fix, address, or resolve review comments on a pull request. Examples: "PR のレビュー指摘を修正して", "PR #5 のコメントを直して", "レビュー指摘に対応して", "PR レビューの修正をして".
+---
+
 # PR 指摘修正スキル
 
 GitHub PR のレビューコメントを取得し、指摘事項を順番に修正します。

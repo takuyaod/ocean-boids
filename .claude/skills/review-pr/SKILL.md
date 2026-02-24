@@ -1,3 +1,7 @@
+---
+description: Use when the user wants to review a pull request, get code review feedback on a PR, or run automated review checks. Examples: "PR をレビューして", "PR #5 をレビュー", "コードレビューして", "PR の品質チェックして".
+---
+
 # PR レビュースキル
 
 指定した PR に対して、複数の観点から並列でレビューを行い、統合レポートを出力します。

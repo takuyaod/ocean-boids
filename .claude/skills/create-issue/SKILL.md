@@ -1,3 +1,7 @@
+---
+description: Use when the user wants to create a GitHub issue. Examples: "issue を作って", "issue を作成して", "issue 作成依頼".
+---
+
 # GitHub Issue 作成スキル
 
 ユーザーの指示をもとに GitHub に issue を作成します。

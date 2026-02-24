@@ -1,3 +1,7 @@
+---
+description: Use when the user wants to create a pull request (PR) on GitHub for the current branch. Examples: "PR を作って", "プルリクを出して", "PR を作成して", "PR を出して".
+---
+
 # プルリクエスト作成スキル
 
 現在のブランチからプルリクエストを作成します。対応する issue を自動で特定してクローズします。
