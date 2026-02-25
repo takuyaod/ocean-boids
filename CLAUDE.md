@@ -65,6 +65,12 @@ app/src/features/
 
 - **コミット禁止**: ユーザーから明示的に指示されない限り、git commit を実行しないこと
 
+## GitHub CLI 規則
+
+- **対象リポジトリ**: このリポジトリ（ocean-boids）のみを操作対象とする。他のリポジトリは参照・操作しないこと
+- **read 系操作**（`gh pr view`、`gh issue list`、`gh repo view`、`gh auth status` など）: ユーザーの許可なく実行してよい
+- **write 系操作**（`gh pr create`、`gh issue create`、`gh pr merge` など）: 必ずユーザーに確認してから実行すること
+
 ## スキル（Claude Code カスタムコマンド）
 
 プロジェクト固有のスキルは `~/.claude/` ではなく、このリポジトリ内の [.claude/skills/](.claude/skills/) ディレクトリに作成してください。これにより、スキルをバージョン管理に含められます。
