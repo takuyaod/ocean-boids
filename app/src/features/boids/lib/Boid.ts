@@ -9,10 +9,10 @@ import {
   OCTOPUS_INK_PROBABILITY,
   OCTOPUS_INK_COOLDOWN_MS,
   OCTOPUS_INK_CLOUD_DURATION_MS,
-  OCTOPUS_INK_CLOUD_MAX_RADIUS,
   PREDATOR_CONFUSION_DURATION_MS,
   type SpeciesParams,
 } from './constants';
+import { computeInkCloudState } from './inkUtils';
 
 import { Vec2, magnitude, normalize, limit } from './vec2';
 import type { Predator } from './Predator';
@@ -174,14 +174,18 @@ export class Boid {
 
       // スミ雲当たり判定：サメがスミ雲の範囲内に入ったときのみ混乱状態にする
       // すでに混乱中のサメには再付与しない（毎フレーム呼ぶと方向がリセットされ続けるため）
+      // 注: 現在 OCTOPUS_INK_CLOUD_DURATION_MS(3000ms) < PREDATOR_CONFUSION_DURATION_MS(4000ms) のため、
+      //     スミ雲消滅後もサメは混乱し続ける。両定数が逆転した場合、混乱が解けた後もスミ雲が残り
+      //     !predator.isConfused が真になるため再び混乱が付与されるエッジケースが生じる。
       if (this._lastInkedAt !== NEVER_INKED && !predator.isConfused) {
         const inkAge = now - this._lastInkedAt;
-        if (inkAge >= 0 && inkAge <= OCTOPUS_INK_CLOUD_DURATION_MS) {
-          // boidRenderer の computeInkCloudState と同じ式でスミ雲の現在半径を算出
-          const progress = inkAge / OCTOPUS_INK_CLOUD_DURATION_MS;
-          const cloudRadius = Math.max(5, OCTOPUS_INK_CLOUD_MAX_RADIUS * Math.sqrt(progress));
-          const dxCloud = predator.x - this._lastInkX;
-          const dyCloud = predator.y - this._lastInkY;
+        if (inkAge <= OCTOPUS_INK_CLOUD_DURATION_MS) {
+          const { radius: cloudRadius } = computeInkCloudState(inkAge);
+          // ラップアラウンド補正：画面端をまたぐ場合の最短距離で判定
+          let dxCloud = predator.x - this._lastInkX;
+          if (Math.abs(dxCloud) > width / 2) dxCloud -= Math.sign(dxCloud) * width;
+          let dyCloud = predator.y - this._lastInkY;
+          if (Math.abs(dyCloud) > height / 2) dyCloud -= Math.sign(dyCloud) * height;
           if (magnitude(dxCloud, dyCloud) <= cloudRadius) {
             predator.confuse(PREDATOR_CONFUSION_DURATION_MS);
           }

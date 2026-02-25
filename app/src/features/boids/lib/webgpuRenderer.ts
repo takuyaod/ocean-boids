@@ -1,7 +1,7 @@
 import type { BoidsRenderer } from './renderer';
 import type { Boid } from './Boid';
 import type { Predator } from './Predator';
-import { computeInkCloudState } from './boidRenderer';
+import { computeInkCloudState } from './inkUtils';
 import {
   BoidSpecies,
   SPECIES_SPRITES,
