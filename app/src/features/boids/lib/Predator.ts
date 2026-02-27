@@ -207,7 +207,7 @@ export class Predator {
       this.vx = vel.x;
       this.vy = vel.y;
 
-      // 速度が有効なうちに進行方向角度を更新（しびれ発生時に _lastAngle が参照される）
+      // 速度がゼロでない間は角度を更新する（しびれ中は vx/vy がゼロになるため、しびれ突入直前の角度が _lastAngle に保持される）
       if (this.vx !== 0 || this.vy !== 0) {
         this._lastAngle = Math.atan2(this.vy, this.vx);
       }
