@@ -69,7 +69,7 @@ export class Boid {
         sx += (dx / dist) / dist;
         sy += (dy / dist) / dist;
         // 分離は全種を等しく扱うため totalWeight ではなく count を使用
-        // （align/cohere と異なり intraSpeciesBias による重み付けを行わない）
+        // （align/cohere と異なり intraSpeciesBias・maxFlockSize による調整を行わない）
         count++;
       }
     }
@@ -78,31 +78,53 @@ export class Boid {
     return limit(norm.x * maxSpeed - this.vx, norm.y * maxSpeed - this.vy, maxForce);
   }
 
-  // 整列ルール：近くのBoidの進行方向に合わせる（同種ボイドを intraSpeciesBias 倍で優先）
-  private align(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { alignmentRadius, intraSpeciesBias, maxFlockSize } = this.params;
-    let avx = 0, avy = 0, totalWeight = 0;
+  // 指定半径内の隣接ボイドを、maxFlockSize を考慮した重み付きリストで返す（align/cohere 共通）
+  private weightedNeighbors(boids: Boid[], radius: number): Array<{ other: Boid; weight: number }> {
+    const { intraSpeciesBias, maxFlockSize } = this.params;
+    const neighbors: Array<{ other: Boid; weight: number }> = [];
     let sameSpeciesCount = 0;
     for (const other of boids) {
       if (other === this) continue;
       const dx = this.x - other.x;
       const dy = this.y - other.y;
       const dist = magnitude(dx, dy);
-      if (dist > 0 && dist < alignmentRadius) {
+      if (dist > 0 && dist < radius) {
         const isSameSpecies = other.species === this.species;
         // 同種の群れ規模が上限に達したらその個体は無視する
         if (isSameSpecies && sameSpeciesCount >= maxFlockSize) continue;
         if (isSameSpecies) sameSpeciesCount++;
-        // 同種のボイドにはバイアス倍率を適用し、優先的に整列する
-        const bias = isSameSpecies ? intraSpeciesBias : 1.0;
-        avx += other.vx * bias;
-        avy += other.vy * bias;
-        totalWeight += bias;
+        neighbors.push({ other, weight: isSameSpecies ? intraSpeciesBias : 1.0 });
       }
     }
-    if (totalWeight === 0) return { x: 0, y: 0 };
+    return neighbors;
+  }
+
+  // 整列ルール：近くのBoidの進行方向に合わせる（同種ボイドを intraSpeciesBias 倍で優先）
+  private align(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
+    const { alignmentRadius } = this.params;
+    const neighbors = this.weightedNeighbors(boids, alignmentRadius);
+    if (neighbors.length === 0) return { x: 0, y: 0 };
+    let avx = 0, avy = 0, totalWeight = 0;
+    for (const { other, weight } of neighbors) {
+      avx += other.vx * weight;
+      avy += other.vy * weight;
+      totalWeight += weight;
+    }
     const norm = normalize(avx / totalWeight, avy / totalWeight);
     return limit(norm.x * maxSpeed - this.vx, norm.y * maxSpeed - this.vy, maxForce);
+  }
+
+  // 慣性ルール：現在の進行方向を維持しようとする力（inertiaBias > 0 の種のみ計算）
+  // normalize は速度ゼロ時に {0, 0} を返すため、speed ゼロの個別ガードは不要
+  private inertia(maxSpeed: number, maxForce: number): Vec2 {
+    if (this.params.inertiaBias <= 0) return { x: 0, y: 0 };
+    const norm = normalize(this.vx, this.vy);
+    const force = limit(
+      norm.x * maxSpeed - this.vx,
+      norm.y * maxSpeed - this.vy,
+      maxForce,
+    );
+    return { x: force.x * this.params.inertiaBias, y: force.y * this.params.inertiaBias };
   }
 
   // 逃避ルール：捕食者が近づいたら全力で逃げる（ラップアラウンド考慮）
@@ -121,27 +143,15 @@ export class Boid {
 
   // 結合ルール：近くのBoidの重心に向かう（同種ボイドを intraSpeciesBias 倍で優先）
   private cohere(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { cohesionRadius, intraSpeciesBias, maxFlockSize } = this.params;
+    const { cohesionRadius } = this.params;
+    const neighbors = this.weightedNeighbors(boids, cohesionRadius);
+    if (neighbors.length === 0) return { x: 0, y: 0 };
     let cx = 0, cy = 0, totalWeight = 0;
-    let sameSpeciesCount = 0;
-    for (const other of boids) {
-      if (other === this) continue;
-      const dx = this.x - other.x;
-      const dy = this.y - other.y;
-      const dist = magnitude(dx, dy);
-      if (dist > 0 && dist < cohesionRadius) {
-        const isSameSpecies = other.species === this.species;
-        // 同種の群れ規模が上限に達したらその個体は無視する
-        if (isSameSpecies && sameSpeciesCount >= maxFlockSize) continue;
-        if (isSameSpecies) sameSpeciesCount++;
-        // 同種のボイドにはバイアス倍率を適用し、優先的に凝集する
-        const bias = isSameSpecies ? intraSpeciesBias : 1.0;
-        cx += other.x * bias;
-        cy += other.y * bias;
-        totalWeight += bias;
-      }
+    for (const { other, weight } of neighbors) {
+      cx += other.x * weight;
+      cy += other.y * weight;
+      totalWeight += weight;
     }
-    if (totalWeight === 0) return { x: 0, y: 0 };
     // 重心へのベクトルを求める
     const norm = normalize(cx / totalWeight - this.x, cy / totalWeight - this.y);
     return limit(norm.x * maxSpeed - this.vx, norm.y * maxSpeed - this.vy, maxForce);
@@ -155,10 +165,11 @@ export class Boid {
     const effectiveMaxSpeed = params.maxSpeed * (maxSpeed / MAX_SPEED);
     const effectiveMaxForce = params.maxForce * (maxForce / MAX_FORCE);
 
-    const separation = this.separate(boids, effectiveMaxSpeed, effectiveMaxForce);
-    const alignment  = this.align(boids, effectiveMaxSpeed, effectiveMaxForce);
-    const cohesion   = this.cohere(boids, effectiveMaxSpeed, effectiveMaxForce);
-    const fleeForce  = this.flee(predator, width, height, effectiveMaxSpeed, effectiveMaxForce);
+    const separation   = this.separate(boids, effectiveMaxSpeed, effectiveMaxForce);
+    const alignment    = this.align(boids, effectiveMaxSpeed, effectiveMaxForce);
+    const cohesion     = this.cohere(boids, effectiveMaxSpeed, effectiveMaxForce);
+    const fleeForce    = this.flee(predator, width, height, effectiveMaxSpeed, effectiveMaxForce);
+    const inertiaForce = this.inertia(effectiveMaxSpeed, effectiveMaxForce);
 
     // タコ固有の処理：スミ放出 + スミ雲当たり判定
     if (this.species === BoidSpecies.Octopus) {
@@ -203,33 +214,17 @@ export class Boid {
       }
     }
 
-    // 慣性バイアス：現在の進行方向を維持しようとする力（inertiaBias > 0 の種のみ計算）
-    let inertiaX = 0, inertiaY = 0;
-    if (params.inertiaBias > 0) {
-      const speed = magnitude(this.vx, this.vy);
-      if (speed > 0) {
-        const norm = normalize(this.vx, this.vy);
-        const inertiaForce = limit(
-          norm.x * effectiveMaxSpeed - this.vx,
-          norm.y * effectiveMaxSpeed - this.vy,
-          effectiveMaxForce,
-        );
-        inertiaX = inertiaForce.x * params.inertiaBias;
-        inertiaY = inertiaForce.y * params.inertiaBias;
-      }
-    }
-
     // 種固有の重みで各ルールの力を加算（逃避が最優先）
     this.vx += separation.x * params.separationWeight
              + alignment.x  * params.alignmentWeight
              + cohesion.x   * params.cohesionWeight
              + fleeForce.x  * params.fleeWeight
-             + inertiaX;
+             + inertiaForce.x;
     this.vy += separation.y * params.separationWeight
              + alignment.y  * params.alignmentWeight
              + cohesion.y   * params.cohesionWeight
              + fleeForce.y  * params.fleeWeight
-             + inertiaY;
+             + inertiaForce.y;
 
     const vel = limit(this.vx, this.vy, effectiveMaxSpeed);
     this.vx = vel.x;
