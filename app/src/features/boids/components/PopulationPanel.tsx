@@ -34,7 +34,7 @@ const SPECIES_DISPLAY_ORDER: ReadonlyArray<{
   {
     species: BoidSpecies.Squid,
     label: 'squid',
-    tooltip: '[イカ] 小グループで移動。中程度の凝集力・逃避力（flee: 3.0）',
+    tooltip: '[イカ] ジェット推進で直線的に移動（慣性バイアスで方向を維持、わずかなブレあり）。少数グループ（〜5匹）で行動する',
   },
   {
     species: BoidSpecies.Octopus,

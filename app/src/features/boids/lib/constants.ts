@@ -147,6 +147,8 @@ export type SpeciesParams = {
   cohesionWeight: number;    // 凝集ルールの重み
   fleeWeight: number;        // 捕食者逃避の重み
   intraSpeciesBias: number;  // 同種ボイドへの整列・凝集の優先度倍率（1.0 = バイアスなし）
+  inertiaBias: number;       // 現在の進行方向を維持しようとする慣性バイアス（0 = バイアスなし）
+  maxFlockSize: number;      // 整列・凝集で参照する同種個体数の上限（Infinity = 上限なし）
 };
 
 export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
@@ -157,14 +159,16 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 65,   alignmentWeight: 1.2,
     cohesionRadius: 65,    cohesionWeight: 1.5,
     fleeWeight: 4.5,       intraSpeciesBias: 8.0,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
-  // イカ：小グループで行動する中型の頭足類
+  // イカ：ジェット推進で直線的に移動し、少数グループで行動する頭足類
   [BoidSpecies.Squid]: {
     maxSpeed: 2.2,   maxForce: 0.04,
     separationRadius: 40,  separationWeight: 1.5,
     alignmentRadius: 60,   alignmentWeight: 0.7,
     cohesionRadius: 60,    cohesionWeight: 0.7,
     fleeWeight: 3.0,       intraSpeciesBias: 3.0,
+    inertiaBias: 2.0,      maxFlockSize: 5,
   },
   // タコ：孤立傾向が強い知性的な頭足類
   // alignmentWeight/cohesionWeight が極めて小さいため、intraSpeciesBias は 1.0（バイアスなし）で十分な孤立行動を実現できる
@@ -174,6 +178,7 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 50,   alignmentWeight: 0.15,
     cohesionRadius: 50,    cohesionWeight: 0.1,
     fleeWeight: 2.5,       intraSpeciesBias: 1.0,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
   // カニ：ゆっくりと移動する甲殻類
   [BoidSpecies.Crab]: {
@@ -182,6 +187,7 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 50,   alignmentWeight: 0.5,
     cohesionRadius: 50,    cohesionWeight: 0.6,
     fleeWeight: 2.0,       intraSpeciesBias: 2.0,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
   // ウミガメ：独立行動で長距離を移動する爬虫類
   [BoidSpecies.SeaTurtle]: {
@@ -190,6 +196,7 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 90,   alignmentWeight: 0.5,
     cohesionRadius: 90,    cohesionWeight: 0.4,
     fleeWeight: 1.5,       intraSpeciesBias: 1.5,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
   // クラゲ：受動的に漂う刺胞動物（捕食者をほぼ無視）
   [BoidSpecies.Jellyfish]: {
@@ -198,6 +205,7 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 55,   alignmentWeight: 0.15,
     cohesionRadius: 55,    cohesionWeight: 0.15,
     fleeWeight: 0.5,       intraSpeciesBias: 1.0,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
   // マンタ：広い整列範囲で緩やかなループを描く大型魚
   [BoidSpecies.Manta]: {
@@ -206,6 +214,7 @@ export const SPECIES_PARAMS: Record<BoidSpecies, SpeciesParams> = {
     alignmentRadius: 130,  alignmentWeight: 1.0,
     cohesionRadius: 130,   cohesionWeight: 0.6,
     fleeWeight: 2.5,       intraSpeciesBias: 2.0,
+    inertiaBias: 0,        maxFlockSize: Infinity,
   },
 };
 

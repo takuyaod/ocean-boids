@@ -80,16 +80,21 @@ export class Boid {
 
   // 整列ルール：近くのBoidの進行方向に合わせる（同種ボイドを intraSpeciesBias 倍で優先）
   private align(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { alignmentRadius, intraSpeciesBias } = this.params;
+    const { alignmentRadius, intraSpeciesBias, maxFlockSize } = this.params;
     let avx = 0, avy = 0, totalWeight = 0;
+    let sameSpeciesCount = 0;
     for (const other of boids) {
       if (other === this) continue;
       const dx = this.x - other.x;
       const dy = this.y - other.y;
       const dist = magnitude(dx, dy);
       if (dist > 0 && dist < alignmentRadius) {
+        const isSameSpecies = other.species === this.species;
+        // 同種の群れ規模が上限に達したらその個体は無視する
+        if (isSameSpecies && sameSpeciesCount >= maxFlockSize) continue;
+        if (isSameSpecies) sameSpeciesCount++;
         // 同種のボイドにはバイアス倍率を適用し、優先的に整列する
-        const bias = other.species === this.species ? intraSpeciesBias : 1.0;
+        const bias = isSameSpecies ? intraSpeciesBias : 1.0;
         avx += other.vx * bias;
         avy += other.vy * bias;
         totalWeight += bias;
@@ -116,16 +121,21 @@ export class Boid {
 
   // 結合ルール：近くのBoidの重心に向かう（同種ボイドを intraSpeciesBias 倍で優先）
   private cohere(boids: Boid[], maxSpeed: number, maxForce: number): Vec2 {
-    const { cohesionRadius, intraSpeciesBias } = this.params;
+    const { cohesionRadius, intraSpeciesBias, maxFlockSize } = this.params;
     let cx = 0, cy = 0, totalWeight = 0;
+    let sameSpeciesCount = 0;
     for (const other of boids) {
       if (other === this) continue;
       const dx = this.x - other.x;
       const dy = this.y - other.y;
       const dist = magnitude(dx, dy);
       if (dist > 0 && dist < cohesionRadius) {
+        const isSameSpecies = other.species === this.species;
+        // 同種の群れ規模が上限に達したらその個体は無視する
+        if (isSameSpecies && sameSpeciesCount >= maxFlockSize) continue;
+        if (isSameSpecies) sameSpeciesCount++;
         // 同種のボイドにはバイアス倍率を適用し、優先的に凝集する
-        const bias = other.species === this.species ? intraSpeciesBias : 1.0;
+        const bias = isSameSpecies ? intraSpeciesBias : 1.0;
         cx += other.x * bias;
         cy += other.y * bias;
         totalWeight += bias;
@@ -193,15 +203,33 @@ export class Boid {
       }
     }
 
+    // 慣性バイアス：現在の進行方向を維持しようとする力（inertiaBias > 0 の種のみ計算）
+    let inertiaX = 0, inertiaY = 0;
+    if (params.inertiaBias > 0) {
+      const speed = magnitude(this.vx, this.vy);
+      if (speed > 0) {
+        const norm = normalize(this.vx, this.vy);
+        const inertiaForce = limit(
+          norm.x * effectiveMaxSpeed - this.vx,
+          norm.y * effectiveMaxSpeed - this.vy,
+          effectiveMaxForce,
+        );
+        inertiaX = inertiaForce.x * params.inertiaBias;
+        inertiaY = inertiaForce.y * params.inertiaBias;
+      }
+    }
+
     // 種固有の重みで各ルールの力を加算（逃避が最優先）
     this.vx += separation.x * params.separationWeight
              + alignment.x  * params.alignmentWeight
              + cohesion.x   * params.cohesionWeight
-             + fleeForce.x  * params.fleeWeight;
+             + fleeForce.x  * params.fleeWeight
+             + inertiaX;
     this.vy += separation.y * params.separationWeight
              + alignment.y  * params.alignmentWeight
              + cohesion.y   * params.cohesionWeight
-             + fleeForce.y  * params.fleeWeight;
+             + fleeForce.y  * params.fleeWeight
+             + inertiaY;
 
     const vel = limit(this.vx, this.vy, effectiveMaxSpeed);
     this.vx = vel.x;
